@@ -34,6 +34,32 @@ public class NodeDataController {
         return Result.ok();
     }
 
+    @GetMapping("/node/data")
+    public Result<List<NodeData>> getNodeData(@RequestParam String flowId, @RequestParam(required = false)String version) {
+        log.info(flowId);
+        List<NodeData> list = nodeDataService.getNodeData(flowId,version);
+        return Result.of(list);
+    }
+
+
+    @GetMapping("/node/data/version")
+    public Result<List<String>> getVersionList(@RequestParam String flowId) {
+        log.info(flowId);
+        List<String> version = nodeDataService.getVersion(flowId);
+        return Result.of(version);
+    }
+
+    @PostMapping("/node/data/version")
+    public Result<String> setVersion(@RequestParam String version, @RequestBody List<NodeData> list) {
+        if (version.length() > 32) {
+            throw new InvalidStatesException("The version name is too long");
+        }
+        checkBody(list);
+        list.forEach(nodeData -> nodeData.setVersion(version));
+        nodeDataService.updateNodeData(list);
+        return Result.ok();
+    }
+
     private void checkBody(List<NodeData> list) {
         if (CollectionUtils.isEmpty(list)) {
             throw new InvalidStatesException("the flow data is empty");
@@ -48,30 +74,4 @@ public class NodeDataController {
         }
     }
 
-    @GetMapping("/node/data")
-    public Result<List<NodeData>> setNodeData(@RequestParam String flowId) {
-        log.info(flowId);
-        List<NodeData> list = nodeDataService.findByFlowId(flowId);
-        return Result.of(list);
-    }
-
-
-    @GetMapping("/node/data/version")
-    public Result<List<String>> getVersionList(@RequestParam String flowId) {
-        log.info(flowId);
-        List<NodeData> list = nodeDataService.findByFlowId(flowId);
-        List<String> collect = list.stream().map(NodeData::getVersion).collect(Collectors.toList());
-        return Result.of(collect);
-    }
-
-    @PostMapping("/node/data/version")
-    public Result<String> setVersion(@RequestParam String version, @RequestBody List<NodeData> list) {
-        if (version.length() > 32) {
-            throw new InvalidStatesException("The version name is too long");
-        }
-        checkBody(list);
-        list.forEach(nodeData -> nodeData.setVersion(version));
-        nodeDataService.updateNodeData(list);
-        return Result.ok();
-    }
 }
